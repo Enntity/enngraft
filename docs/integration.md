@@ -1,6 +1,8 @@
 # Integration
 
-The CLI accepts a project directory. Use `enngraft .` from the unpacked project, or pass its path from a wrapper. `enngraft install .` is the explicit equivalent. Python callers use the same controller.
+The CLI accepts a project directory. Use `enngraft .` from the unpacked project, or pass its path from a wrapper. `enngraft install .` is the explicit equivalent. The terminal shows each step as it starts. When the configured model plans a build or repair, it can also describe the step. The installer prints `Installed` after the checks pass and the release is active. Use `--json` for the full receipt. Redirected and piped stdout retain the JSON format.
+
+Run `enngraft go [ARGS...]` from the project directory to launch its current release. For a custom destination use `enngraft go --prefix PATH [ARGS...]`. Use `--` to pass a literal leading `--prefix` or `--` to your program. A Docker release runs in its recorded local image, with the current working directory mounted at `/work` and installed files at `/app`. Native releases use the caller’s working directory. Python callers use the same installer and can pass `progress=print` for step messages.
 
 ```python
 import os
@@ -34,6 +36,7 @@ Discovery inspects common source/build files at the root, language package direc
 | --- | --- |
 | `GRAFT_ENDPOINT` | Full request URL for the owner's provider |
 | `GRAFT_MODEL` | Model ID. For Gemini use that same ID in the generateContent URL. |
+| `GRAFT_MODEL_TIMEOUT` | Model response timeout in seconds (default 90) |
 | `GRAFT_API_KEY` | Optional model credential |
 | `GRAFT_PROTOCOL` | `openai`, `messages`, or `gemini` |
 | `GRAFT_IMAGE` or `--image` | Locally available Docker toolchain for a Linux target |

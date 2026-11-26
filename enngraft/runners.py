@@ -127,6 +127,21 @@ class DockerTarget(Target):
             raise ValueError("Docker toolchain unavailable: " + (err or out)[:400])
         self.image = out.strip()
 
+    def launch(self, app, entry, args):
+        # The program sees its installed files and the caller's working directory.
+        cwd = Path.cwd()
+        if any("," in str(path) for path in (app, cwd)):
+            raise ValueError("Docker mount paths cannot contain a comma")
+        flags = [self.docker, "run", "--rm", "--pull=never", "-i"]
+        if os.isatty(0) and os.isatty(1):
+            flags.append("-t")
+        flags += ["--network=none", "--read-only", "--cap-drop=ALL", "--security-opt=no-new-privileges",
+                  "--user", f"{os.getuid()}:{os.getgid()}", "--tmpfs", "/tmp", "--env", "HOME=/tmp",
+                  "--mount", f"type=bind,src={app},dst=/app,readonly",
+                  "--mount", f"type=bind,src={cwd},dst=/work", "-w", "/work",
+                  "--entrypoint", "/app/" + entry, self.image, *args]
+        os.execve(self.docker, flags, self.env)
+
     def run(self, argv, directory, writable):
         name = "enngraft-" + uuid.uuid4().hex
         mount = str(Path(directory).resolve())

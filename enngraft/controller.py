@@ -10,7 +10,7 @@ import stat
 import tempfile
 import uuid
 
-from .discovery import infer, inventory, project_name
+from .discovery import infer, inventory, project_name, split_progress
 
 MAX_SOURCE = 64 * 1024
 MAX_OUTPUT = 64 * 1024 * 1024
@@ -159,12 +159,13 @@ def rollback(prefix):
         raise ValueError("No previous release")
 
 
-def build_and_check(target, work, app, m, sources, modes, facts):
+def build_and_check(target, work, app, m, sources, modes, facts, report, messages):
     for name, contents in sources.items():
         dest = work / name
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_bytes(contents.encode())
         dest.chmod(modes[name])
+    report(messages.get("build", f"Building {m['entry']}…"))
     code, out, err = target.run(m["build"], work, writable=True)
     if code:
         return {"phase": "build", "exit": code, "diagnostic": (out + err)[-4096:]}
@@ -181,6 +182,7 @@ def build_and_check(target, work, app, m, sources, modes, facts):
             dst.chmod(0o755 if mode & 0o111 else 0o644)
     except (FileNotFoundError, ValueError) as exc:
         return {"phase": "collect", "diagnostic": str(exc)}
+    report(messages.get("check", f"Checking {m['entry']}…"))
     for check in m["checks"]:
         cmd = ["./" + m["entry"], *check["args"]]
         code, out, err = target.run(cmd, app, writable=False)
@@ -202,13 +204,15 @@ def default_prefix(name):
     return legacy if legacy.is_dir() else data / "enngraft" / name
 
 
-def install(project, prefix, target, model=None, repairs=3):
+def install(project, prefix, target, model=None, repairs=3, *, progress=None):
     """Install from a project directory. Return the verified release receipt."""
+    report = progress if progress is not None else lambda message: None
     if type(repairs) != int or not 0 <= repairs <= 8:
         raise ValueError("Repair budget must be 0 through 8")
     root = Path(project).resolve()
     if not root.is_dir():
         raise ValueError("Project must be a directory")
+    report("Reading the project…")
     m = contract(root) if os.path.lexists(root / "graft.json") else None
     app_name = m["name"] if m else project_name(root)
     prefix = Path(prefix).resolve() if prefix is not None else default_prefix(app_name)
@@ -232,16 +236,18 @@ def install(project, prefix, target, model=None, repairs=3):
         history = []
         with tempfile.TemporaryDirectory(dir=prefix, prefix=".graft-") as tmp:
             scratch = Path(tmp)
+            report("Checking the machine…")
+            messages = {}
             facts = target.facts(scratch)
             if m is None:
-                m, origin = infer(root, sources, model if repairs else None, facts)
+                m, origin, messages = infer(root, sources, model if repairs else None, facts, report)
                 validate_contract(m, discovered=origin == "metadata")
             for attempt in range(repairs + 1):
                 with tempfile.TemporaryDirectory(dir=scratch) as stage:
                     work, app = Path(stage) / "source", Path(stage) / "app"
                     work.mkdir()
                     app.mkdir()
-                    failure = build_and_check(target, work, app, m, current, modes, facts)
+                    failure = build_and_check(target, work, app, m, current, modes, facts, report, messages)
                     if failure is None:
                         release = uuid.uuid4().hex
                         path = f"releases/{release}/app"
@@ -265,7 +271,10 @@ def install(project, prefix, target, model=None, repairs=3):
                     raise ValueError(f"Installation failed: {json.dumps(failure)}")
                 packet = {"target": facts, "contract": m, "files": current, "failure": failure,
                           "prior_attempts": history, "remaining_repairs": repairs - attempt}
-                revised = patched(model.propose(packet), current, m["editable"])
+                report(f"The {failure['phase']} step failed. Finding a repair…")
+                proposal, captions = split_progress(model.propose(packet))
+                revised = patched(proposal, current, m["editable"])
+                report(captions.get("repair", "Applying the repair…"))
                 history.append({"phase": failure["phase"], "diagnostic": failure["diagnostic"],
                                 "changed": sorted(k for k in revised if revised[k] != current[k])})
                 current = revised

@@ -1,11 +1,15 @@
+import io
 import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from enngraft import Model, install, rollback
+from enngraft.__main__ import main
 from enngraft.controller import locked
 from enngraft.runners import execute
 
@@ -70,6 +74,31 @@ class InstallTest(unittest.TestCase):
         self.assertEqual(agent.packets[0]["failure"]["phase"], "check")
         self.assertEqual(receipt["repairs"][0]["changed"], ["program"])
         self.assertEqual(self.program.read_text(), bad)
+
+    def test_tty_gets_steps_and_a_runnable_command_and_json_is_opt_in(self):
+        with patch("enngraft.__main__.MacTarget", return_value=self.target), patch.dict(os.environ, {}, clear=True):
+            for as_json in (False, True):
+                with self.subTest(as_json=as_json), patch("sys.stdout", new_callable=io.StringIO) as out:
+                    out.isatty = lambda: True
+                    args = [str(self.root), "--prefix", str(self.prefix)]
+                    self.assertEqual(main(args + (["--json"] if as_json else [])), 0)
+                    if as_json:
+                        self.assertEqual(json.loads(out.getvalue())["entry"], "tool")
+                    else:
+                        self.assertIn("Checking tool", out.getvalue())
+                        self.assertIn("Installed tool.", out.getvalue())
+                        self.assertIn("Run: enngraft go --prefix ", out.getvalue())
+
+    def test_go_forwards_arguments_streams_and_exit_status(self):
+        self.program.write_text("#!/bin/sh\nif [ $# = 0 ]; then echo working; exit; fi\n"
+                                "printf '%s\\n' \"$@\"; cat; exit 7\n")
+        self.go()
+        env = dict(os.environ, PYTHONPATH=str(Path(__file__).resolve().parents[1]))
+        proc = subprocess.run([sys.executable, "-m", "enngraft", "go", "--prefix", str(self.prefix),
+                               "--", "--prefix", "two words", "; echo no"],
+                              cwd=self.root, env=env, input="stdin\n", capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 7, proc.stderr)
+        self.assertEqual(proc.stdout, "--prefix\ntwo words\n; echo no\nstdin\n")
 
     def test_rejects_check_spoof_on_stderr(self):
         self.program.write_text("#!/bin/sh\necho working >&2\n")

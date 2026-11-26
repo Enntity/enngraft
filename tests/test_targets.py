@@ -41,6 +41,9 @@ class RealTarget(unittest.TestCase):
             self.assertEqual(len(receipt["repairs"]), 1)
             if isinstance(self.target, DockerTarget):
                 self.assertEqual(receipt["target"]["executor_limits"]["memory_bytes"], 512 * 1024**2)
+            command = ["enngraft", "go", "--prefix", str(prefix), "--bytes", "another input"]
+            output = subprocess.run(command, cwd=project, text=True, capture_output=True)
+            self.assertEqual((output.returncode, output.stdout), (0, "13\n"), output.stderr)
             result = self.target.run(["./hoststamp", "--bytes", "another input"], prefix / "current", False)
             self.assertEqual((result.code, result.stdout), (0, "13\n"))
 

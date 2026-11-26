@@ -119,7 +119,20 @@ def documented_checks(readme, entry):
     return checks
 
 
-def infer(root, files, model, facts):
+def split_progress(proposal):
+    """Treat model captions as optional display text, never as installer instructions."""
+    if not isinstance(proposal, dict) or "progress" not in proposal:
+        return proposal, {}
+    proposal = proposal.copy()
+    messages = proposal.pop("progress")
+    if not isinstance(messages, dict):
+        return proposal, {}
+    return proposal, {key: value.strip() for key, value in messages.items()
+                      if key in {"build", "check", "repair"} and isinstance(value, str)
+                      and 0 < len(value.strip()) <= 100 and value.isprintable()}
+
+
+def infer(root, files, model, facts, report):
     readme = files.get("README.md", files.get("README", ""))
     recipe = local_recipe(files)
     editable = [name for name in files if name not in {"README", "README.md"}]
@@ -127,13 +140,15 @@ def infer(root, files, model, facts):
     if recipe:
         entry, build, outputs = recipe
         return {**fixed, "entry": entry, "outputs": outputs, "build": build,
-                "checks": documented_checks(readme, entry) or [{"args": ["--help"], "nonempty_stdout": True}]}, "metadata"
+                "checks": documented_checks(readme, entry) or [{"args": ["--help"], "nonempty_stdout": True}]}, "metadata", {}
     if model is None:
         raise ValueError("No unambiguous local recipe. Configure a model to infer the build and checks, "
                          "or supply graft.json.")
     if not callable(getattr(model, "plan", None)):
         raise ValueError("This model adapter needs a plan(packet) method for project discovery")
+    report("Finding a build that fits this machine…")
     plan = model.plan({"target": facts, "project": fixed["name"], "files": files})
+    plan, messages = split_progress(plan)
     if isinstance(plan, dict) and set(plan) == {"stop"}:
         raise ValueError("Planner stopped: " + str(plan["stop"])[:512])
     if not isinstance(plan, dict) or set(plan) != {"entry", "outputs", "build", "checks"}:
@@ -146,4 +161,4 @@ def infer(root, files, model, facts):
         isinstance(c, dict) and isinstance(c.get("stdout"), str) and c["stdout"].strip() for c in plan["checks"]
     ):
         raise ValueError("Inferred plan needs a behavioral check with nonempty expected stdout")
-    return {**fixed, **plan}, "model"
+    return {**fixed, **plan}, "model", messages

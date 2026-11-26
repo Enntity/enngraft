@@ -19,10 +19,11 @@ class Transports(unittest.TestCase):
         ]
         for protocol, path, header, auth, field, envelope in cases:
             with self.subTest(protocol=protocol), patch("urllib.request.build_opener") as opener:
-                model = Model(protocol, "https://example.org" + path, "m", "secret")
+                model = Model(protocol, "https://example.org" + path, "m", "secret", timeout=135)
                 transport = opener.return_value
                 transport.open.return_value = io.BytesIO(json.dumps(envelope).encode())
                 self.assertEqual(model.propose({"facts": "abc"}), json.loads(text))
+                self.assertEqual(transport.open.call_args.kwargs["timeout"], 135)
                 req = transport.open.call_args.args[0]
                 self.assertEqual(dict((k.lower(), v) for k, v in req.header_items())[header.lower()], auth)
                 self.assertIn(field, json.loads(req.data))

@@ -46,6 +46,19 @@ class DiscoveryTest(unittest.TestCase):
         stored = (self.prefix / "current").resolve().parent / "contract.json"
         self.assertEqual(json.loads(stored.read_text())["checks"], self.plan["checks"])
 
+    def test_plan_messages_follow_execution_and_never_enter_the_contract(self):
+        captions = {"build": "Compiling hello", "check": "Checking its greeting"}
+        reports = []
+        agent = Planner({**self.plan, "progress": captions})
+        install(self.root, self.prefix, FixtureTarget(), agent, progress=reports.append)
+        self.assertEqual(reports[-2:], list(captions.values()))
+        contract = json.loads((self.prefix / "current").resolve().parent.joinpath("contract.json").read_text())
+        self.assertNotIn("progress", contract)
+        reports.clear()
+        agent.response["progress"] = {"build": "bad\x1b[2J", "check": "bad\ncommand"}
+        install(self.root, self.prefix, FixtureTarget(), agent, progress=reports.append)
+        self.assertEqual(reports[-2:], ["Building hello…", "Checking hello…"])
+
     def test_ignored_files_and_output_limits(self):
         import subprocess
         subprocess.run(["git", "init", "-q", str(self.root)], check=True)
