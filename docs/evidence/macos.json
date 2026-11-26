@@ -1,0 +1,75 @@
+{
+  "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+  "receipt": {
+    "name": "hoststamp",
+    "release": "ec93cfffddfa486980e9a726e764837f",
+    "previous": null,
+    "target": {
+      "os": "Darwin",
+      "machine": "arm64",
+      "kernel": "27.0.0",
+      "logical_cpus": "12",
+      "physical_memory_bytes": "103079215104",
+      "tools": [
+        "/Library/Developer/CommandLineTools/usr/bin/cc",
+        "/Library/Developer/CommandLineTools/usr/bin/clang",
+        "/Library/Developer/CommandLineTools/usr/bin/gcc",
+        "/Library/Developer/CommandLineTools/usr/bin/make",
+        "/Library/Developer/CommandLineTools/usr/bin/python3"
+      ]
+    },
+    "image": null,
+    "model": "deepseek/deepseek-v4.1-flash-1017",
+    "entry": "hoststamp",
+    "repairs": [
+      {
+        "phase": "build",
+        "diagnostic": "build.sh: line 3: /opt/cross-toolchain/bin/cc: No such file or directory\n",
+        "changed": [
+          "build.sh",
+          "hoststamp.c"
+        ]
+      }
+    ],
+    "checks": 3,
+    "sha256": {
+      "hoststamp": "6685c31da771cd4b18310efbf52f591a8de1d63f0cd7488656f8ee4916373ca6"
+    }
+  },
+  "replacements": {
+    "build.sh": "#!/bin/sh\nset -eu\nCC=\"${CC:-/Library/Developer/CommandLineTools/usr/bin/cc}\"\n\"$CC\" -std=c11 -O2 hoststamp.c -o hoststamp\n",
+    "hoststamp.c": "#include <stdio.h>\n#include <string.h>\n#include <sys/utsname.h>\n\n/* Print the running machine architecture or the byte length of an argument. */\nint main(int argc, char **argv) {\n    if (argc == 2 && strcmp(argv[1], \"--arch\") == 0) {\n        struct utsname u;\n        if (uname(&u) == 0) {\n            puts(u.machine);\n        } else {\n            puts(\"unknown\");\n        }\n        return 0;\n    }\n    if (argc == 3 && strcmp(argv[1], \"--bytes\") == 0) {\n        printf(\"%zu\\n\", strlen(argv[2]));\n        return 0;\n    }\n    fprintf(stderr, \"usage: hoststamp --arch | --bytes TEXT\\n\");\n    return 2;\n}\n"
+  },
+  "independent_checks": [
+    {
+      "argv": [
+        "--bytes",
+        "Café 🧬"
+      ],
+      "exit": 0,
+      "stdout": "10\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "--arch"
+      ],
+      "exit": 0,
+      "stdout": "arm64\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "--invalid"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: hoststamp --arch | --bytes TEXT\n"
+    }
+  ],
+  "input_sha256": {
+    "build.sh": "5ef470ab8caedf4436ca705cd3db72e62e11cedf45a52c2f0821d0dd9730d708",
+    "graft.json": "a8c06bab07269e24636ea3f30f5b67967923a543bc376e2b89c9042655f40cf2",
+    "hoststamp.c": "75330eea5c0f826173c4580f58967ab018891b82ad267109b7a157f87e8956cf"
+  }
+}

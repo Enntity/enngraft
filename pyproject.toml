@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "enntity-graft"
+version = "0.1.0"
+description = "Model-assisted installation and repair for source packages"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+readme = "README.md"
+
+[project.scripts]
+enntity-graft = "enntity_graft.__main__:main"
+
+[tool.setuptools]
+packages = ["enntity_graft"]

@@ -1,0 +1,75 @@
+{
+  "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+  "receipt": {
+    "name": "hoststamp",
+    "release": "9a3eae1c628547adb54c519b02244e52",
+    "previous": null,
+    "target": {
+      "os": "Linux",
+      "machine": "aarch64",
+      "kernel": "7.0.14-linuxkit",
+      "logical_cpus": "12",
+      "physical_memory_bytes": "16745562112",
+      "tools": [
+        "/usr/bin/cc",
+        "/usr/bin/gcc",
+        "/usr/bin/make",
+        "/usr/bin/python3",
+        "/usr/local/bin/node"
+      ]
+    },
+    "image": "sha256:9053d5c3cd85c47cbb702a2a7cbeaf928ea57c7f7994e0e3cc8c7d03e168c36b",
+    "model": "deepseek/deepseek-v4.1-flash-1017",
+    "entry": "hoststamp",
+    "repairs": [
+      {
+        "phase": "build",
+        "diagnostic": "build.sh: 3: /opt/cross-toolchain/bin/cc: not found\n",
+        "changed": [
+          "build.sh",
+          "hoststamp.c"
+        ]
+      }
+    ],
+    "checks": 3,
+    "sha256": {
+      "hoststamp": "9432529638000088a2cff167b2ea09463efd473dab924e34a177c7181ab3c86c"
+    }
+  },
+  "replacements": {
+    "build.sh": "#!/bin/sh\nset -eu\ncc -std=c11 -O2 hoststamp.c -o hoststamp\n",
+    "hoststamp.c": "#include <stdio.h>\n#include <string.h>\n\nstatic const char *machine_arch(void) {\n#if defined(__aarch64__) || defined(_M_ARM64)\n    return \"aarch64\";\n#elif defined(__x86_64__) || defined(_M_X64)\n    return \"x86_64\";\n#elif defined(__i386__) || defined(_M_IX86)\n    return \"i386\";\n#elif defined(__arm__) || defined(_M_ARM)\n    return \"arm\";\n#elif defined(__powerpc64__)\n    return \"ppc64\";\n#elif defined(__powerpc__)\n    return \"ppc\";\n#elif defined(__s390x__)\n    return \"s390x\";\n#elif defined(__riscv) && (__riscv_xlen == 64)\n    return \"riscv64\";\n#else\n    return \"unknown\";\n#endif\n}\n\nint main(int argc, char **argv) {\n    if (argc == 2 && strcmp(argv[1], \"--arch\") == 0) {\n        puts(machine_arch());\n        return 0;\n    }\n    if (argc == 3 && strcmp(argv[1], \"--bytes\") == 0) {\n        printf(\"%zu\\n\", strlen(argv[2]));\n        return 0;\n    }\n    fprintf(stderr, \"usage: hoststamp --arch | --bytes TEXT\\n\");\n    return 2;\n}\n"
+  },
+  "independent_checks": [
+    {
+      "argv": [
+        "--bytes",
+        "Café 🧬"
+      ],
+      "exit": 0,
+      "stdout": "10\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "--arch"
+      ],
+      "exit": 0,
+      "stdout": "aarch64\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "--invalid"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: hoststamp --arch | --bytes TEXT\n"
+    }
+  ],
+  "input_sha256": {
+    "build.sh": "5ef470ab8caedf4436ca705cd3db72e62e11cedf45a52c2f0821d0dd9730d708",
+    "graft.json": "a8c06bab07269e24636ea3f30f5b67967923a543bc376e2b89c9042655f40cf2",
+    "hoststamp.c": "75330eea5c0f826173c4580f58967ab018891b82ad267109b7a157f87e8956cf"
+  }
+}

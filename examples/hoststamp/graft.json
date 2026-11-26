@@ -1,0 +1,10 @@
+{
+  "version": 1, "name": "hoststamp",
+  "files": ["build.sh", "hoststamp.c"], "editable": ["build.sh", "hoststamp.c"],
+  "build": ["/bin/sh", "build.sh"], "outputs": ["hoststamp"], "entry": "hoststamp",
+  "checks": [
+    {"args": ["--arch"], "stdout": "@machine@\n"},
+    {"args": ["--bytes", "aé茶"], "stdout": "6\n"},
+    {"args": ["--bytes", ""], "stdout": "0\n"}
+  ]
+}

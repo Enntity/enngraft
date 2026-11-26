@@ -1,0 +1,121 @@
+import json
+import os
+from pathlib import Path
+import subprocess
+import tempfile
+import unittest
+
+from enntity_graft import Model, install, rollback
+from enntity_graft.controller import locked
+from enntity_graft.runners import execute
+
+
+class FixtureTarget:
+    def facts(self, directory):
+        return {"machine": "fixture", "os": "test"}
+
+    def run(self, args, directory, writable):
+        return execute(args, directory, {"PATH": "/usr/bin:/bin"}, 3)
+
+
+class Repair:
+    model = "test-adapter"
+
+    def __init__(self, answer):
+        self.answer = answer
+        self.packets = []
+
+    def propose(self, packet):
+        self.packets.append(packet)
+        return self.answer
+
+
+class InstallTest(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name).resolve()
+        self.prefix = self.root / "prefix"
+        self.target = FixtureTarget()
+        self.manifest = {"version": 1, "name": "test", "files": ["program"], "editable": ["program"],
+                         "build": ["cp", "program", "tool"], "outputs": ["tool"], "entry": "tool",
+                         "checks": [{"args": [], "stdout": "working\n"}]}
+        self.manifest_write()
+        self.program = self.root / "program"
+        self.good = "#!/bin/sh\necho working\n"
+        self.program.write_text(self.good)
+        self.program.chmod(0o755)
+
+    def manifest_write(self):
+        (self.root / "graft.json").write_text(json.dumps(self.manifest))
+
+    def go(self, agent=None, repairs=3):
+        return install(self.root, self.prefix, self.target, agent, repairs)
+
+    def test_healthy_is_offline_and_rollback_selects_previous(self):
+        first = self.go()
+        self.assertIsNone(first["model"])
+        second = self.go(Repair({"stop": "unexpected cloud call"}))
+        self.assertEqual(second["previous"], f"releases/{first['release']}/app")
+        self.assertEqual(rollback(self.prefix), second["previous"])
+        self.assertEqual(subprocess.check_output([self.prefix / "current/tool"]), b"working\n")
+
+    def test_failed_check_then_repair_in_clean_stage(self):
+        bad = "#!/bin/sh\necho broken\n"
+        self.program.write_text(bad)
+        self.manifest["build"] = ["/bin/sh", "-ec", "test ! -e stale && touch stale && cp program tool"]
+        self.manifest_write()
+        agent = Repair({"edits": {"program": self.good}})
+        receipt = self.go(agent)
+        self.assertEqual(agent.packets[0]["failure"]["phase"], "check")
+        self.assertEqual(receipt["repairs"][0]["changed"], ["program"])
+        self.assertEqual(self.program.read_text(), bad)
+
+    def test_rejects_check_spoof_on_stderr(self):
+        self.program.write_text("#!/bin/sh\necho working >&2\n")
+        with self.assertRaisesRegex(ValueError, "Installation failed"):
+            self.go()
+
+    def test_invalid_edit_keeps_selected_release(self):
+        self.go()
+        active = os.readlink(self.prefix / "current")
+        self.program.write_text("#!/bin/sh\nexit 1\n")
+        for answer in ({"edits": {"../outside": "x"}}, {"edits": {"graft.json": "{}"}},
+                       {"edits": {"program": self.program.read_text()}}, {"stop": "missing dependency"}):
+            with self.subTest(answer=answer), self.assertRaises(ValueError):
+                self.go(Repair(answer))
+        self.assertEqual(os.readlink(self.prefix / "current"), active)
+
+    def test_budget_and_readonly_contract(self):
+        self.manifest["checks"][0]["stdout"] = "impossible\n"
+        self.manifest_write()
+        agent = Repair({"edits": {"program": self.good + "# retry\n"}})
+        with self.assertRaisesRegex(ValueError, "Installation failed"):
+            self.go(agent, 1)
+        self.assertEqual(len(agent.packets), 1)
+        self.assertFalse((self.prefix / "current").exists())
+
+    def test_symlinks_are_rejected_for_input_and_output(self):
+        self.program.rename(self.root / "outside")
+        self.program.symlink_to(self.root / "outside")
+        with self.assertRaisesRegex(ValueError, "regular file"):
+            self.go()
+        self.program.unlink()
+        (self.root / "outside").rename(self.program)
+        self.manifest["build"] = ["ln", "-s", str(self.program), "tool"]
+        self.manifest_write()
+        with self.assertRaisesRegex(ValueError, "collect"):
+            self.go()
+
+    def test_concurrent_writer_and_wrong_package(self):
+        with locked(self.prefix), self.assertRaisesRegex(ValueError, "Another install"):
+            self.go()
+        self.go()
+        self.manifest["name"] = "other"
+        self.manifest_write()
+        with self.assertRaisesRegex(ValueError, "another application"):
+            self.go()
+
+    def test_timeout_and_output_bound(self):
+        self.assertEqual(execute(["/bin/sleep", "1"], self.root, {}, 0.05).code, 124)
+        self.assertEqual(execute(["/usr/bin/yes"], self.root, {}, 2).code, 125)
