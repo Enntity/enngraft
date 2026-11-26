@@ -10,6 +10,12 @@ make conv 'CFLAGS_CONV=-std=c99 -O3' 'LFLAGS_CONV=-lm'
 
 That command builds the upstream WAV/QOA converter with the MP3 and FLAC input paths disabled. The standalone player is a separate target. The installation completed in 64.89 seconds in this single run. The source tree was clean before and after. The receipt records zero source edits. The adaptation happened in the build recipe.
 
+## Watch the terminal session
+
+We ran the released CLI again to record the film. The first take timed out waiting for DeepSeek after 90 seconds. On the second take, `enngraft .` finished in 89 seconds. This time the model selected `make qoaconv 'CFLAGS_CONV=-std=c99 -O3'`. The checkout stayed clean. The installed converter produced the same QOA file as the first field trial, byte for byte.
+
+The film shortens the wait. The full terminal recordings preserve the original timing and output, including the install receipt. A script typed the commands into an interactive shell. To replay either recording locally, download the file and run `asciinema play` with its filename. [Film](../../enngraft-demos.mp4) · [Successful take](terminal.cast) · [Timed-out take](terminal-timeout.cast)
+
 ## Repeat the installation
 
 Start on a Mac with Command Line Tools, Enngraft installed, and a configured model endpoint. The model can choose a different recipe on a subsequent run.
