@@ -12,9 +12,18 @@ That command builds the upstream WAV/QOA converter with the MP3 and FLAC input p
 
 ## Watch the terminal session
 
-We ran the released CLI again to record the film. The first take timed out waiting for the model after 90 seconds. On the second take, `enngraft .` finished in 89 seconds. This time the model selected `make qoaconv 'CFLAGS_CONV=-std=c99 -O3'`. The checkout stayed clean. The installed converter produced the same QOA file as the first field trial, byte for byte.
+The film follows one `enngraft .` invocation from the failed baseline to a verified converter. Its terminal text comes from the recorded shell. The model supplied the build and check descriptions. Enngraft printed them when those operations started, then printed `Installed qoaconv.` and `Run: enngraft go` after selecting the verified release.
 
-The film shortens the wait. The full terminal recordings preserve the original timing and output, including the install receipt. After the installer returned to the shell, we recorded a separate invocation of the executable at the exact path printed in its receipt. It compressed the original soundtrack to the published QOA file. The recordings use scripted input to a real shell. Replay any of them with `asciinema play` and the downloaded filename. [Film](../../enngraft-demos.mp4) · [Successful install](terminal.cast) · [Using the returned executable](use.cast) · [Timed-out take](terminal-timeout.cast)
+From the same checkout we used the installed program twice. The WAV file was in the parent directory.
+
+```sh
+enngraft go ../song.wav ../song.qoa
+enngraft go ../song.qoa ../decoded.wav
+```
+
+The first take reached the default 90-second model timeout. We set `GRAFT_MODEL_TIMEOUT=300` and repeated the installation. It took 129.8 seconds. The film shortens the wait. The original terminal timing is available in both recordings. Download a cast and run `asciinema play` with its filename. [Film](../../enngraft-demos.mp4) · [Full live CLI session](live-cli.cast) · [Timed-out session](live-cli-timeout.cast)
+
+The earlier JSON-output trial is available for comparison. [Install](terminal.cast) · [Running the receipt’s executable](use.cast) · [Timed-out attempt](terminal-timeout.cast)
 
 ## Repeat the installation
 
