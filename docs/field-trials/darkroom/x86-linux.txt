@@ -1,0 +1,7 @@
+$ uname -sm
+Linux x86_64
+$ make
+cc -O2 -std=c99 darkroom.c invert.c -o darkroom
+$ ./darkroom ../negative.ppm ../print.ppm
+Developed 769 x 769 pixels.
+Verified print SHA-256: c83f10770269f30b0102ffd78422c4c6961638422991ee6f74efd433a062e594

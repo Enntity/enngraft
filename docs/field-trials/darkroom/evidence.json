@@ -1,0 +1,62 @@
+{
+  "fixture_commit": "5e0faadd72ccb11f86974dfb2e842ca56b74d9a3",
+  "installer_revision": "a0fd1e7dc31e7c6beab6e5a6f932671a7ea91162",
+  "x86_run": "https://github.com/Enntity/enngraft/actions/runs/45863971977",
+  "source_sha256": {
+    "Makefile": "e630c4c6a01214dcfc6ad1b44838ba7c763bdbdaf9204962f076c8046eb5b56f",
+    "README.md": "1b81580182de6ae363602d4fb8cc48e420f899ced0382c91fca90c8cc3e4a7d2",
+    "darkroom.c": "66a48d99438b08d34aea74304d7e58845c1c069363c916a6487f99973c603981",
+    "invert.c": "80db60fd898c6a94e6a4cd7171595abc16288e99c32f7b203bde468f149fce0f"
+  },
+  "negative_sha256": "6a71d2603d985b53d22a635aa85e7efd6436c7dee2d02e57920f8556c5cb624d",
+  "print_bytes": 1774098,
+  "output_sha256": {
+    "independent_reference": "c83f10770269f30b0102ffd78422c4c6961638422991ee6f74efd433a062e594",
+    "x86_linux": "c83f10770269f30b0102ffd78422c4c6961638422991ee6f74efd433a062e594",
+    "native_macos_arm64": "c83f10770269f30b0102ffd78422c4c6961638422991ee6f74efd433a062e594",
+    "docker_linux_arm64": "c83f10770269f30b0102ffd78422c4c6961638422991ee6f74efd433a062e594"
+  },
+  "mac": {
+    "install_seconds": 66.08,
+    "checks": 6,
+    "entry": "darkroom",
+    "image": null,
+    "system": "Darwin",
+    "machine": "arm64",
+    "contract_source": "model",
+    "repairs": [
+      {
+        "phase": "check",
+        "diagnostic": "rosetta error: Failed to open libRosettaRuntime\n ",
+        "changed": [
+          "Makefile",
+          "invert.c"
+        ]
+      }
+    ],
+    "installed_sha256": {
+      "darkroom": "aa73f517477d93d6d60393e59036dd7872384344f4787ad15524c880bd7fa2f2"
+    }
+  },
+  "arm-linux": {
+    "install_seconds": 54.78,
+    "checks": 4,
+    "entry": "darkroom",
+    "image": "sha256:9053d5c3cd85c47cbb702a2a7cbeaf928ea57c7f7994e0e3cc8c7d03e168c36b",
+    "system": "Linux",
+    "machine": "aarch64",
+    "contract_source": "model",
+    "repairs": [
+      {
+        "phase": "build",
+        "diagnostic": "cc -O2 -std=c99 darkroom.c invert.c -o darkroom\ninvert.c:3:2: error: #error \"Darkroom requires an x86 processor with SSE2\"\n    3 | #error \"Darkroom requires an x86 processor with SSE2\"\n      |  ^~~~~\nmake: *** [Makefile:2: darkroom] Error 1\n",
+        "changed": [
+          "invert.c"
+        ]
+      }
+    ],
+    "installed_sha256": {
+      "darkroom": "c0e22b40dccc2b7cfa5507ba5f0d5106ec9850465ad0a87101bb3c2ab7a2b5c1"
+    }
+  }
+}

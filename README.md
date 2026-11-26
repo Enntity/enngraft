@@ -21,4 +21,4 @@ export GRAFT_MODEL="your-model-id"
 
 OpenAI-compatible endpoints are the default. Set `GRAFT_PROTOCOL=messages` for Claude or `gemini` for Gemini. A local model may omit the key. Native macOS needs Command Line Tools. For a Linux target, set `GRAFT_IMAGE` to a locally installed Docker image containing your build tools.
 
-Watch the installer build and check your program. When it prints `Installed`, copy the command after `Run:` and add your program’s usual arguments. [Watch Enngraft build QOA on a Mac](docs/enngraft-demos.mp4) · [Reproduce the field trial](docs/field-trials/qoa/README.md) · [Integration details and limits](docs/integration.md)
+Watch the installer build and check your program. When it prints `Installed`, copy the command after `Run:` and add your program’s usual arguments. [Watch the same photo tool on three targets](docs/field-trials/darkroom/README.md) · [Watch Enngraft build QOA on a Mac](docs/enngraft-demos.mp4) · [Reproduce the field trial](docs/field-trials/qoa/README.md) · [Integration details and limits](docs/integration.md)
