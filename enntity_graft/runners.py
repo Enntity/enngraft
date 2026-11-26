@@ -106,6 +106,14 @@ class MacTarget(Target):
 
 
 class DockerTarget(Target):
+    memory_mib = 512
+    cpus = 2
+
+    def facts(self, directory):
+        facts = super().facts(directory)
+        facts["executor_limits"] = {"cpu_quota": self.cpus, "memory_bytes": self.memory_mib * 1024**2}
+        return facts
+
     def __init__(self, image):
         self.docker = shutil.which("docker")
         if not self.docker or not image or image.startswith("-"):
@@ -127,7 +135,7 @@ class DockerTarget(Target):
         flags = [self.docker, "run", "--rm", "--pull=never", "--name", name, "--network=none",
                  "--label", "io.enntity.owner=enntity-graft", "--label", "io.enntity.job=" + name,
                  "--read-only", "--cap-drop=ALL", "--security-opt=no-new-privileges",
-                 "--pids-limit=64", "--cpus=2", "--memory=512m", "--tmpfs", "/tmp:size=128m",
+                 "--pids-limit=64", f"--cpus={self.cpus}", f"--memory={self.memory_mib}m", "--tmpfs", "/tmp:size=128m",
                  "--user", f"{os.getuid()}:{os.getgid()}", "--env", "HOME=/tmp", "--env", "LC_ALL=C",
                  "--mount", "type=bind,src=" + mount + ",dst=/work" + ("" if writable else ",readonly"),
                  "-w", "/work", "--entrypoint", "/usr/bin/env", self.image]

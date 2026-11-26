@@ -2,7 +2,7 @@
   "endpoint": "https://openrouter.ai/api/v1/chat/completions",
   "receipt": {
     "name": "hoststamp",
-    "release": "9a3eae1c628547adb54c519b02244e52",
+    "release": "4c6c2299e771453eac385e6aec691d16",
     "previous": null,
     "target": {
       "os": "Linux",
@@ -16,7 +16,11 @@
         "/usr/bin/make",
         "/usr/bin/python3",
         "/usr/local/bin/node"
-      ]
+      ],
+      "executor_limits": {
+        "cpu_quota": 2,
+        "memory_bytes": 536870912
+      }
     },
     "image": "sha256:9053d5c3cd85c47cbb702a2a7cbeaf928ea57c7f7994e0e3cc8c7d03e168c36b",
     "model": "deepseek/deepseek-v4.1-flash-1017",
@@ -33,12 +37,12 @@
     ],
     "checks": 3,
     "sha256": {
-      "hoststamp": "9432529638000088a2cff167b2ea09463efd473dab924e34a177c7181ab3c86c"
+      "hoststamp": "46e22226b3c4b27f35136da0f5a07c6ab3fe8b68170b983d0ed4bd31aa6af0ca"
     }
   },
   "replacements": {
-    "build.sh": "#!/bin/sh\nset -eu\ncc -std=c11 -O2 hoststamp.c -o hoststamp\n",
-    "hoststamp.c": "#include <stdio.h>\n#include <string.h>\n\nstatic const char *machine_arch(void) {\n#if defined(__aarch64__) || defined(_M_ARM64)\n    return \"aarch64\";\n#elif defined(__x86_64__) || defined(_M_X64)\n    return \"x86_64\";\n#elif defined(__i386__) || defined(_M_IX86)\n    return \"i386\";\n#elif defined(__arm__) || defined(_M_ARM)\n    return \"arm\";\n#elif defined(__powerpc64__)\n    return \"ppc64\";\n#elif defined(__powerpc__)\n    return \"ppc\";\n#elif defined(__s390x__)\n    return \"s390x\";\n#elif defined(__riscv) && (__riscv_xlen == 64)\n    return \"riscv64\";\n#else\n    return \"unknown\";\n#endif\n}\n\nint main(int argc, char **argv) {\n    if (argc == 2 && strcmp(argv[1], \"--arch\") == 0) {\n        puts(machine_arch());\n        return 0;\n    }\n    if (argc == 3 && strcmp(argv[1], \"--bytes\") == 0) {\n        printf(\"%zu\\n\", strlen(argv[2]));\n        return 0;\n    }\n    fprintf(stderr, \"usage: hoststamp --arch | --bytes TEXT\\n\");\n    return 2;\n}\n"
+    "build.sh": "#!/bin/sh\nset -eu\n/usr/bin/cc -std=c11 -D_POSIX_C_SOURCE=200809L -O2 hoststamp.c -o hoststamp\n",
+    "hoststamp.c": "#include <stdio.h>\n#include <string.h>\n#include <sys/utsname.h>\n\n/* Print the running machine architecture or the byte length of an argument. */\nint main(int argc, char **argv) {\n    if (argc == 2 && strcmp(argv[1], \"--arch\") == 0) {\n        struct utsname info;\n        if (uname(&info) == 0 && info.machine[0] != '\\0') {\n            puts(info.machine);\n        } else {\n            puts(\"unknown\");\n        }\n        return 0;\n    }\n    if (argc == 3 && strcmp(argv[1], \"--bytes\") == 0) {\n        printf(\"%zu\\n\", strlen(argv[2]));\n        return 0;\n    }\n    fprintf(stderr, \"usage: hoststamp --arch | --bytes TEXT\\n\");\n    return 2;\n}\n"
   },
   "independent_checks": [
     {

@@ -33,6 +33,8 @@ class RealTarget(unittest.TestCase):
             prefix = Path(d).resolve()
             receipt = install(FIXTURE, prefix, self.target, KnownRepair())
             self.assertEqual(len(receipt["repairs"]), 1)
+            if isinstance(self.target, DockerTarget):
+                self.assertEqual(receipt["target"]["executor_limits"]["memory_bytes"], 512 * 1024**2)
             result = self.target.run(["./hoststamp", "--bytes", "another input"], prefix / "current", False)
             self.assertEqual((result.code, result.stdout), (0, "13\n"))
 
