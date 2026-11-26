@@ -1,0 +1,145 @@
+{
+  "upstream": "https://github.com/phoboslab/qoa",
+  "upstream_fix": "fb57da0a3638751cfb325039a7950ea5cf0583ea",
+  "enngraft_revision": "2b8e2144ad90e06301b89a1900569678353060f7",
+  "model_route": "LLooM / deepseek-flash",
+  "install": {
+    "revision": "52ed2d1c748e7cce7f26bdea80461049e0aa2f9f",
+    "before": "",
+    "after": "",
+    "baseline": {
+      "argv": [
+        "make",
+        "conv"
+      ],
+      "exit": 2,
+      "stdout": "cc -std=c99 -O3 -D QOACONV_HAS_DRMP3 -D QOACONV_HAS_DRFLAC qoaconv.c -o qoaconv -lm\n",
+      "stderr": "qoaconv.c:27:11: fatal error: 'dr_mp3.h' file not found\n   27 |         #include \"dr_mp3.h\"\n      |                  ^~~~~~~~~~\n1 error generated.\nmake: *** [qoaconv] Error 1\n"
+    },
+    "argv": [
+      "enngraft",
+      "."
+    ],
+    "exit": 0,
+    "elapsed_seconds": 64.89,
+    "stderr": "",
+    "receipt": {
+      "name": "qoa",
+      "release": "95d42754b9414eb9abed8f11237b9908",
+      "previous": null,
+      "target": {
+        "os": "Darwin",
+        "machine": "arm64",
+        "kernel": "27.0.0",
+        "logical_cpus": "12",
+        "physical_memory_bytes": "103079215104",
+        "tools": [
+          "/Library/Developer/CommandLineTools/usr/bin/cc",
+          "/Library/Developer/CommandLineTools/usr/bin/clang",
+          "/Library/Developer/CommandLineTools/usr/bin/gcc",
+          "/Library/Developer/CommandLineTools/usr/bin/make",
+          "/Library/Developer/CommandLineTools/usr/bin/python3"
+        ]
+      },
+      "image": null,
+      "model": "deepseek-flash",
+      "contract_source": "model",
+      "entry": "qoaconv",
+      "repairs": [],
+      "checks": 5,
+      "sha256": {
+        "qoaconv": "fd62ec6aa4c1eef0c2cde1cc4fdd73ee8a4b270187e45c7bba8bf3bb62e9c608"
+      }
+    },
+    "contract": {
+      "version": 1,
+      "name": "qoa",
+      "files": [
+        "Makefile",
+        "README.md",
+        "qoa.h",
+        "qoaconv.c",
+        "qoaplay.c"
+      ],
+      "editable": [
+        "Makefile",
+        "qoa.h",
+        "qoaconv.c",
+        "qoaplay.c"
+      ],
+      "build": [
+        "make",
+        "conv",
+        "CFLAGS_CONV=-std=c99 -O3",
+        "LFLAGS_CONV=-lm"
+      ],
+      "outputs": [
+        "qoaconv"
+      ],
+      "entry": "qoaconv",
+      "checks": [
+        {
+          "args": [],
+          "stdout": "Abort at line 234: \nUsage: qoaconv in.{wav,mp3,flac,qoa} out.{wav,qoa}\n",
+          "exit": 1
+        },
+        {
+          "args": [
+            "song.mp3",
+            "out.qoa"
+          ],
+          "stdout": "Abort at line 251: qoaconv was not compiled with an MP3 decoder (QOACONV_HAS_DRMP3)\n",
+          "exit": 1
+        },
+        {
+          "args": [
+            "song.flac",
+            "out.qoa"
+          ],
+          "stdout": "Abort at line 258: qoaconv was not compiled with a FLAC decoder (QOACONV_HAS_DRFLAC)\n",
+          "exit": 1
+        },
+        {
+          "args": [
+            "input.txt",
+            "out.qoa"
+          ],
+          "stdout": "Abort at line 265: Unknown file type for input.txt\n",
+          "exit": 1
+        },
+        {
+          "args": [
+            "input.wav",
+            "out.qoa"
+          ],
+          "stdout": "Abort at line 121: Can't open input.wav for reading\n",
+          "exit": 1
+        }
+      ]
+    },
+    "edits": {}
+  },
+  "audio": {
+    "frames": 2574142,
+    "seconds": 58.370566893424034,
+    "channels": 2,
+    "sample_rate": 44100,
+    "snr_db": 37.88,
+    "independent_ffmpeg_pcm_equal": true,
+    "files": {
+      "signal-garden.wav": {
+        "bytes": 10296612,
+        "sha256": "2462c215429f27e3d89892a6f1c076eda7fe400e82a1ac8a502e5cd4e53a0986"
+      },
+      "signal-garden.qoa": {
+        "bytes": 2079456,
+        "sha256": "db1ea56dd05792669b1804284e42e47fdcd9e7a4e124eb423bd4dfa81357f873"
+      },
+      "decoded.wav": {
+        "bytes": 10296612,
+        "sha256": "b9de5c350be6fe441a78323d1315329b4354d7f1d84d37d913775f62ee57484c"
+      }
+    },
+    "ratio": 4.95
+  }
+}

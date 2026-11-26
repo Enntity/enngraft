@@ -21,4 +21,4 @@ export GRAFT_MODEL=deepseek/deepseek-v4.1-flash-1017
 
 OpenAI-compatible endpoints are the default. Set `GRAFT_PROTOCOL=messages` for Claude or `gemini` for Gemini. A local model may omit the key. Native macOS needs Command Line Tools. For a Linux target, set `GRAFT_IMAGE` to a locally installed Docker image containing your build tools.
 
-Enngraft prints the verified executable's path. [Watch two real installs](docs/enngraft-demos.mp4) · [Integration details and limits](docs/integration.md)
+Enngraft prints the verified executable's path. [Watch Enngraft build QOA on a Mac](docs/enngraft-demos.mp4) · [Reproduce the field trial](docs/field-trials/qoa/README.md) · [Integration details and limits](docs/integration.md)
