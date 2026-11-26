@@ -2,7 +2,7 @@
 
 A photo lab uses Darkroom to turn RGB digital negatives into positive prints. Its original pixel routine uses x86 SSE2 instructions. This purpose-built compatibility demo uses the same source files and the same image on x86-64 Linux and an Apple-silicon Mac.
 
-[Watch the film](darkroom.mp4), narrated by Jinx with music from Enntity’s original score, *Signal Garden*. The Mac footage comes from a real terminal recording with the model wait shortened. The finished prints shown in the comparison come from the three executables.
+[Watch the film](darkroom.mp4), narrated by Jinx with music from Enntity’s original score, *Signal Garden*. The closing credit animates the pixel grin from Jinx’s *Signatures in the Static*. The Mac footage comes from a real terminal recording with the model wait shortened. The finished prints shown in the comparison come from the three executables.
 
 | Target | What happened | Evidence |
 | --- | --- | --- |
