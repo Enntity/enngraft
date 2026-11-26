@@ -1,0 +1,17 @@
+#include <stddef.h>
+#if !defined(__SSE2__)
+#error "Darkroom requires an x86 processor with SSE2"
+#else
+#include <emmintrin.h>
+
+/* The photo lab's x86 build processes sixteen color samples at a time. */
+void invert(unsigned char *samples, size_t count) {
+    const __m128i white = _mm_set1_epi8(-1);
+    size_t i = 0;
+    for (; count - i >= 16; i += 16) {
+        __m128i block = _mm_loadu_si128((const __m128i *)(samples + i));
+        _mm_storeu_si128((__m128i *)(samples + i), _mm_xor_si128(block, white));
+    }
+    for (; i < count; ++i) samples[i] = 255 - samples[i];
+}
+#endif

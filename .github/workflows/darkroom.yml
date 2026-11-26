@@ -1,0 +1,21 @@
+name: Darkroom x86 reference print
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - examples/darkroom/**
+      - docs/field-trials/darkroom/reference.py
+      - docs/field-trials/darkroom/negative.ppm.gz
+      - .github/workflows/darkroom.yml
+permissions:
+  contents: read
+jobs:
+  develop:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 docs/field-trials/darkroom/reference.py "$RUNNER_TEMP/darkroom-print"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: x86-print
+          path: ${{ runner.temp }}/darkroom-print
