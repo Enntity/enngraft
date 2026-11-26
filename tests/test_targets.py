@@ -1,6 +1,7 @@
 import json
 import os
 from pathlib import Path
+import pty
 import shutil
 import subprocess
 import tempfile
@@ -41,9 +42,6 @@ class RealTarget(unittest.TestCase):
             self.assertEqual(len(receipt["repairs"]), 1)
             if isinstance(self.target, DockerTarget):
                 self.assertEqual(receipt["target"]["executor_limits"]["memory_bytes"], 512 * 1024**2)
-            command = ["enngraft", "go", "--prefix", str(prefix), "--bytes", "another input"]
-            output = subprocess.run(command, cwd=project, text=True, capture_output=True)
-            self.assertEqual((output.returncode, output.stdout), (0, "13\n"), output.stderr)
             result = self.target.run(["./hoststamp", "--bytes", "another input"], prefix / "current", False)
             self.assertEqual((result.code, result.stdout), (0, "13\n"))
 
@@ -68,6 +66,27 @@ class RealTarget(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(Path(json.loads(result.stdout)["executable"]), prefix / "current/hello.sh")
             self.assertEqual(json.loads(result.stdout)["contract_source"], "metadata")
+            # Capture the interactive install hint, then run it from a fresh shell.
+            master, slave = pty.openpty()
+            try:
+                with os.fdopen(slave, "wb") as terminal:
+                    status = subprocess.run(cmd, cwd=project, env=env, stdout=terminal,
+                                            stdin=subprocess.DEVNULL, stderr=subprocess.PIPE)
+                    self.assertEqual(status.returncode, 0, status.stderr)
+                    os.set_blocking(master, False)
+                    output = bytearray()
+                    try:
+                        while chunk := os.read(master, 8192):
+                            output.extend(chunk)
+                    except BlockingIOError:
+                        pass
+                    lines = output.decode().splitlines()
+            finally:
+                os.close(master)
+            hint, = [line.removeprefix("Run: ") for line in lines if line.startswith("Run: ")]
+            launched = subprocess.run(["/bin/sh", "-c", hint], cwd=project, env=env,
+                                      text=True, capture_output=True)
+            self.assertEqual((launched.returncode, launched.stdout), (0, "ready\n"), launched.stderr)
             check = self.target.run(["./hello.sh"], prefix / "current", False)
             self.assertEqual((check.code, check.stdout), (0, "ready\n"))
 

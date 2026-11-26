@@ -12,16 +12,21 @@ That command builds the upstream WAV/QOA converter with the MP3 and FLAC input p
 
 ## Watch the terminal session
 
-The film follows one `enngraft .` invocation from the failed baseline to a verified converter. Its terminal text comes from the recorded shell. The model supplied the build and check descriptions. Enngraft printed them when those operations started, then printed `Installed qoaconv.` and `Run: enngraft go` after selecting the verified release.
+The film shows one `enngraft .` installation from a clean checkout. The install took 73.9 seconds. After building and checking the converter, Enngraft printed its path and returned to the shell.
 
-From the same checkout we used the installed program twice. The WAV file was in the parent directory.
-
-```sh
-enngraft go ../song.wav ../song.qoa
-enngraft go ../song.qoa ../decoded.wav
+```console
+Installed qoaconv.
+Run: ~/.local/share/enngraft/qoa/current/qoaconv
 ```
 
-The first take reached the default 90-second model timeout. We set `GRAFT_MODEL_TIMEOUT=300` and repeated the installation. It took 129.8 seconds. The film shortens the wait. The original terminal timing is available in both recordings. Download a cast and run `asciinema play` with its filename. [Film](../../enngraft-demos.mp4) · [Full live CLI session](live-cli.cast) · [Timed-out session](live-cli-timeout.cast)
+We copied that path and ran the converter twice, first to compress the score and then to decode it.
+
+```sh
+~/.local/share/enngraft/qoa/current/qoaconv ../song.wav ../song.qoa
+~/.local/share/enngraft/qoa/current/qoaconv ../song.qoa ../decoded.wav
+```
+
+The film shortens the model wait. Download the cast and run `asciinema play live-cli.cast` to watch the whole session at its original pace. [Film](../../enngraft-demos.mp4) · [Full terminal recording](live-cli.cast)
 
 The earlier JSON-output trial is available for comparison. [Install](terminal.cast) · [Running the receipt’s executable](use.cast) · [Timed-out attempt](terminal-timeout.cast)
 

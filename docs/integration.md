@@ -2,7 +2,7 @@
 
 The CLI accepts a project directory. Use `enngraft .` from the unpacked project, or pass its path from a wrapper. `enngraft install .` is the explicit equivalent. The terminal shows each step as it starts. When the configured model plans a build or repair, it can also describe the step. The installer prints `Installed` after the checks pass and the release is active. Use `--json` for the full receipt. Redirected and piped stdout retain the JSON format.
 
-Run `enngraft go [ARGS...]` from the project directory to launch its current release. For a custom destination use `enngraft go --prefix PATH [ARGS...]`. Use `--` to pass a literal leading `--prefix` or `--` to your program. A Docker release runs in its recorded local image, with the current working directory mounted at `/work` and installed files at `/app`. Native releases use the caller’s working directory. Python callers use the same installer and can pass `progress=print` for step messages.
+After a successful install, copy the command on the final `Run:` line and append the program’s arguments. On macOS this invokes the installed executable directly. For a Docker target it invokes Docker directly, with the installed program as the entrypoint in its verified image and the install-time working directory mounted at `/work`. Python callers use the same installer and can pass `progress=print` for step messages.
 
 ```python
 import os
