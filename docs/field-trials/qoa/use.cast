@@ -1,0 +1,6 @@
+{"version": 2, "width": 105, "height": 20, "title": "Using the executable path from the QOA installation receipt", "env": {"SHELL": "/bin/bash", "TERM": "xterm"}}
+[0.016, "o", "audio $ "]
+[0.2693, "o", "/private/tmp/enngraft-take2/owner/.local/share/enngraft/qoa/current/qoaconv signal-garden.wav signal-garden.qoa\r\n"]
+[0.2785, "o", "signal-garden.wav: channels: 2, samplerate: 44100 hz, samples per channel: 2574142, duration: 58 sec (took 0.00 seconds)\r\n"]
+[0.4558, "o", "signal-garden.qoa: size: 2030 kb (2079456 bytes) = 278.32 kbit/s, psnr: 53.09 db (took 0.18 seconds)\r\n"]
+[0.4566, "o", "audio $ "]

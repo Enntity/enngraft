@@ -2,7 +2,7 @@
 
 The converter for Dominic Szablewski's Quite OK Audio format once enabled optional MP3 and FLAC input by default. The headers for those formats were distributed separately. A user reported a build failure after downloading GitHub HTML pages in place of the headers. The maintainer explained the optional flags and subsequently made both decoders opt-in. We tested the clean revision immediately before that change. [Upstream issue #73](https://github.com/phoboslab/qoa/issues/73) · [Upstream fix](https://github.com/phoboslab/qoa/commit/fb57da0a3638751cfb325039a7950ea5cf0583ea)
 
-On the untouched checkout, `make conv` failed at `dr_mp3.h`. The released Enngraft CLI read the Makefile and C sources, probed the Mac and requested a plan from DeepSeek through LLooM. With no project manifest or operator-supplied build instructions, it selected the converter target and supplied these flags.
+On the untouched checkout, `make conv` failed at `dr_mp3.h`. The released Enngraft CLI read the Makefile and C sources, probed the Mac and requested a build plan from the configured model. With no project manifest or operator-supplied build instructions, it selected the converter target and supplied these flags.
 
 ```sh
 make conv 'CFLAGS_CONV=-std=c99 -O3' 'LFLAGS_CONV=-lm'
@@ -12,9 +12,9 @@ That command builds the upstream WAV/QOA converter with the MP3 and FLAC input p
 
 ## Watch the terminal session
 
-We ran the released CLI again to record the film. The first take timed out waiting for DeepSeek after 90 seconds. On the second take, `enngraft .` finished in 89 seconds. This time the model selected `make qoaconv 'CFLAGS_CONV=-std=c99 -O3'`. The checkout stayed clean. The installed converter produced the same QOA file as the first field trial, byte for byte.
+We ran the released CLI again to record the film. The first take timed out waiting for the model after 90 seconds. On the second take, `enngraft .` finished in 89 seconds. This time the model selected `make qoaconv 'CFLAGS_CONV=-std=c99 -O3'`. The checkout stayed clean. The installed converter produced the same QOA file as the first field trial, byte for byte.
 
-The film shortens the wait. The full terminal recordings preserve the original timing and output, including the install receipt. A script typed the commands into an interactive shell. To replay either recording locally, download the file and run `asciinema play` with its filename. [Film](../../enngraft-demos.mp4) · [Successful take](terminal.cast) · [Timed-out take](terminal-timeout.cast)
+The film shortens the wait. The full terminal recordings preserve the original timing and output, including the install receipt. After the installer returned to the shell, we recorded a separate invocation of the executable at the exact path printed in its receipt. It compressed the original soundtrack to the published QOA file. The recordings use scripted input to a real shell. Replay any of them with `asciinema play` and the downloaded filename. [Film](../../enngraft-demos.mp4) · [Successful install](terminal.cast) · [Using the returned executable](use.cast) · [Timed-out take](terminal-timeout.cast)
 
 ## Repeat the installation
 
