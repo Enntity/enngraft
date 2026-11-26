@@ -128,12 +128,12 @@ class DockerTarget(Target):
         self.image = out.strip()
 
     def run(self, argv, directory, writable):
-        name = "enntity-graft-" + uuid.uuid4().hex
+        name = "enngraft-" + uuid.uuid4().hex
         mount = str(Path(directory).resolve())
         if "," in mount:
             raise ValueError("Docker staging paths cannot contain a comma")
         flags = [self.docker, "run", "--rm", "--pull=never", "--name", name, "--network=none",
-                 "--label", "io.enntity.owner=enntity-graft", "--label", "io.enntity.job=" + name,
+                 "--label", "io.enntity.owner=enngraft", "--label", "io.enntity.job=" + name,
                  "--read-only", "--cap-drop=ALL", "--security-opt=no-new-privileges",
                  "--pids-limit=64", f"--cpus={self.cpus}", f"--memory={self.memory_mib}m", "--tmpfs", "/tmp:size=128m",
                  "--user", f"{os.getuid()}:{os.getgid()}", "--env", "HOME=/tmp", "--env", "LC_ALL=C",

@@ -18,8 +18,12 @@ The executor owns the build environment. Start with an owner-selected offline Do
 
 Ship a small native executable with a hard-coded compiler path and a Windows-specific hardware probe. Ask cloud DeepSeek to install the pristine package on real targets. Exercise architecture reporting and argument handling on the selected executable, including at least one input outside the manifest. Keep offline regression tests for a bad proposal, an impossible check, repeated installation, prefix state and adapter payloads. Record which provider/target combinations were actually exercised.
 
-## Where to extend Graft
+## Where to extend Enngraft
 
-The controller in `enntity_graft/controller.py` owns manifest validation, the repair budget, release receipts and selection. A model implements `propose(packet)` and returns JSON. A target implements `facts(directory)` and `run(argv, directory, writable)`, returning exit code, stdout and stderr. These boundaries let a project use a provider or isolated build service of its own. The CLI and Python integration call the same install function.
+The controller in `enngraft/controller.py` owns manifest validation, the repair budget, release receipts and selection. A model implements `propose(packet)` and returns JSON. A target implements `facts(directory)` and `run(argv, directory, writable)`, returning exit code, stdout and stderr. These boundaries let a project use a provider or isolated build service of its own. The CLI and Python integration call the same install function.
 
 The first experiment covers one small native package. To expand support, build a corpus of upstream projects with known installation failures and held-out functional checks. Track success, number of model calls, elapsed time and failed assumptions per target. The next executor capability should be dependency acquisition through a project-declared, versioned package source. Separate downloading from the offline build and record what was fetched. Larger packages will need selective file reads in place of a complete source packet. A native Linux, Windows or GPU-specific executor should establish its own hardware observations and regression suite before it is advertised as supported.
+
+## Manifest-free discovery
+
+A project can now provide ordinary source, build metadata and a README. The discovery stage produces the same validated version 1 contract in memory. The receipts distinguish publisher manifests, local metadata discovery and model planning. The selected release records its resolved contract alongside the repair and output hashes. Read the [integration guide](integration.md) for input scope, model-call budgets and verification limits.

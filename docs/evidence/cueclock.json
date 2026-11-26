@@ -1,0 +1,173 @@
+{
+  "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+  "baseline": [
+    {
+      "argv": [
+        "sh",
+        "build.sh"
+      ],
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "./cueclock",
+        "00:00:59,900",
+        "250"
+      ],
+      "code": 0,
+      "stdout": "00:00:60,150\n",
+      "stderr": ""
+    }
+  ],
+  "receipt": {
+    "name": "cueclock",
+    "release": "f50af46776c44cd1a712bcedf7ed5f51",
+    "previous": null,
+    "target": {
+      "os": "Linux",
+      "machine": "aarch64",
+      "kernel": "7.0.14-linuxkit",
+      "logical_cpus": "12",
+      "physical_memory_bytes": "16745562112",
+      "tools": [
+        "/usr/bin/cc",
+        "/usr/bin/gcc",
+        "/usr/bin/make",
+        "/usr/bin/python3",
+        "/usr/local/bin/node"
+      ],
+      "executor_limits": {
+        "cpu_quota": 2,
+        "memory_bytes": 536870912
+      }
+    },
+    "image": "sha256:9053d5c3cd85c47cbb702a2a7cbeaf928ea57c7f7994e0e3cc8c7d03e168c36b",
+    "model": "deepseek/deepseek-v4.1-flash-1017",
+    "contract_source": "model",
+    "entry": "cueclock",
+    "repairs": [
+      {
+        "phase": "check",
+        "diagnostic": "00:00:60,150\n",
+        "changed": [
+          "cueclock.py"
+        ]
+      }
+    ],
+    "checks": 7,
+    "sha256": {
+      "cueclock": "7740cb2c7a9acded2d278ea0129e2c10a845e37979209f544b8cdcffbc0dbbff"
+    }
+  },
+  "inferred_contract": {
+    "version": 1,
+    "name": "cueclock",
+    "files": [
+      "README.md",
+      "build.sh",
+      "cueclock.py"
+    ],
+    "editable": [
+      "build.sh",
+      "cueclock.py"
+    ],
+    "build": [
+      "/bin/sh",
+      "build.sh"
+    ],
+    "outputs": [
+      "cueclock"
+    ],
+    "entry": "cueclock",
+    "checks": [
+      {
+        "args": [
+          "00:00:10,000",
+          "250"
+        ],
+        "stdout": "00:00:10,250\n"
+      },
+      {
+        "args": [
+          "01:02:03,004",
+          "5"
+        ],
+        "stdout": "01:02:03,009\n"
+      },
+      {
+        "args": [
+          "00:01:02,345",
+          "-500"
+        ],
+        "stdout": "00:01:01,845\n"
+      },
+      {
+        "args": [
+          "12:34:56,789",
+          "0"
+        ],
+        "stdout": "12:34:56,789\n"
+      },
+      {
+        "args": [
+          "00:00:59,900",
+          "50"
+        ],
+        "stdout": "00:00:59,950\n"
+      },
+      {
+        "args": [
+          "00:00:00,500",
+          "-250"
+        ],
+        "stdout": "00:00:00,250\n"
+      },
+      {
+        "args": [
+          "00:00:59,900",
+          "250"
+        ],
+        "stdout": "00:01:00,150\n"
+      }
+    ]
+  },
+  "replacements": {
+    "cueclock.py": "#!/usr/bin/env python3\n\"\"\"Shift an SRT subtitle timestamp by a signed millisecond offset.\"\"\"\nimport re\nimport sys\n\n\ndef shift(stamp, offset):\n    match = re.fullmatch(r\"(\\d{2,}):(\\d{2}):(\\d{2}),(\\d{3})\", stamp)\n    if match is None:\n        raise ValueError(\"Expected HH:MM:SS,mmm\")\n    hours, minutes, seconds, millis = map(int, match.groups())\n    total = ((hours * 60 + minutes) * 60 + seconds) * 1000 + millis\n    total = max(0, total + offset)\n    total_seconds, millis = divmod(total, 1000)\n    minutes, seconds = divmod(total_seconds, 60)\n    hours, minutes = divmod(minutes, 60)\n    return f\"{hours:02}:{minutes:02}:{seconds:02},{millis:03}\"\n\n\nif __name__ == \"__main__\":\n    if len(sys.argv) != 3:\n        sys.exit(\"usage: cueclock TIMESTAMP MILLISECONDS\")\n    print(shift(sys.argv[1], int(sys.argv[2])))\n"
+  },
+  "independent_checks": [
+    {
+      "argv": [
+        "00:59:59,980",
+        "40"
+      ],
+      "exit": 0,
+      "stdout": "01:00:00,020\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "00:00:00,001",
+        "-2"
+      ],
+      "exit": 0,
+      "stdout": "00:00:00,000\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "01:00:00,020",
+        "-40"
+      ],
+      "exit": 0,
+      "stdout": "00:59:59,980\n",
+      "stderr": ""
+    }
+  ],
+  "input_sha256": {
+    "README.md": "6e1772e06872a744b952518270e8439c98d64a36d8d8599292def980a6841fcb",
+    "build.sh": "c51a8a9fdd4696cd91c4ac875737c9e69a14b4985bd65ab7a1e6470da860c877",
+    "cueclock.py": "fbced295ac9fc26bdf19398acf6e2a43a275a08cd6f5e7bf5de81620580486d3"
+  }
+}

@@ -25,4 +25,4 @@ jobs:
         env:
           GRAFT_TEST_TARGET: ${{ matrix.target }}
           GRAFT_API_KEY: dummy-marker-for-child-isolation
-      - run: enntity-graft --help
+      - run: enngraft --help

@@ -10,6 +10,8 @@ import stat
 import tempfile
 import uuid
 
+from .discovery import infer, inventory, project_name
+
 MAX_SOURCE = 64 * 1024
 MAX_OUTPUT = 64 * 1024 * 1024
 
@@ -66,6 +68,10 @@ def argv(value, empty=False):
 
 def contract(root):
     m = json.loads(read_file(root, "graft.json", MAX_SOURCE)[0].decode("utf-8"))
+    return validate_contract(m)
+
+
+def validate_contract(m, *, discovered=False):
     fields = {"version", "name", "files", "editable", "build", "outputs", "entry", "checks"}
     if not isinstance(m, dict) or set(m) != fields or type(m["version"]) != int or m["version"] != 1:
         raise ValueError("Expected a version 1 graft.json manifest")
@@ -79,7 +85,13 @@ def contract(root):
     if not isinstance(m["checks"], list) or not 1 <= len(m["checks"]) <= 16:
         raise ValueError("Declare between one and sixteen acceptance checks")
     for check in m["checks"]:
-        if not isinstance(check, dict) or set(check) != {"args", "stdout"} or not isinstance(check["stdout"], str):
+        if discovered and isinstance(check, dict) and set(check) == {"args", "nonempty_stdout"} and check["nonempty_stdout"] is True:
+            argv(check["args"], True)
+            continue
+        if (not isinstance(check, dict) or not {"args", "stdout"} <= set(check)
+                or set(check) - {"args", "stdout", "exit", "stderr"} or not isinstance(check["stdout"], str)
+                or type(check.get("exit", 0)) is not int or not 0 <= check.get("exit", 0) <= 255
+                or ("stderr" in check and not isinstance(check["stderr"], str))):
             raise ValueError("Each check requires args and exact stdout")
         argv(check["args"], True)
     return m
@@ -172,21 +184,37 @@ def build_and_check(target, work, app, m, sources, modes, facts):
     for check in m["checks"]:
         cmd = ["./" + m["entry"], *check["args"]]
         code, out, err = target.run(cmd, app, writable=False)
-        expected = check["stdout"].replace("@machine@", facts["machine"]).replace("@os@", facts["os"])
-        if code or out != expected:
+        if check.get("nonempty_stdout"):
+            if code == 0 and out.strip():
+                continue
             return {"phase": "check", "args": check["args"], "exit": code,
-                    "expected": expected, "diagnostic": (out + err)[-4096:]}
+                    "expected": "nonempty stdout", "diagnostic": (out + err)[-4096:]}
+        expected = check["stdout"].replace("@machine@", facts["machine"]).replace("@os@", facts["os"])
+        if code != check.get("exit", 0) or out != expected or ("stderr" in check and err != check["stderr"]):
+            return {"phase": "check", "args": check["args"], "exit": code,
+                    "expected": check, "diagnostic": (out + err)[-4096:]}
     return None
+
+
+def default_prefix(name):
+    data = Path.home() / ".local/share"
+    legacy = data / "enntity-graft" / name
+    return legacy if legacy.is_dir() else data / "enngraft" / name
 
 
 def install(project, prefix, target, model=None, repairs=3):
     """Install from a project directory. Return the verified release receipt."""
     if type(repairs) != int or not 0 <= repairs <= 8:
         raise ValueError("Repair budget must be 0 through 8")
-    root, prefix = Path(project).resolve(), Path(prefix).resolve()
-    m = contract(root)
+    root = Path(project).resolve()
+    if not root.is_dir():
+        raise ValueError("Project must be a directory")
+    m = contract(root) if os.path.lexists(root / "graft.json") else None
+    app_name = m["name"] if m else project_name(root)
+    prefix = Path(prefix).resolve() if prefix is not None else default_prefix(app_name)
+    origin = "manifest"
     sources, modes = {}, {}
-    for name in m["files"]:
+    for name in (m["files"] if m else inventory(root)):
         data, mode = read_file(root, name, MAX_SOURCE)
         sources[name] = data.decode("utf-8")
         modes[name] = 0o755 if mode & 0o111 else 0o644
@@ -196,7 +224,7 @@ def install(project, prefix, target, model=None, repairs=3):
         previous = selected(prefix)
         if previous:
             old = json.loads((prefix / previous).parent.joinpath("receipt.json").read_text())
-            if old["name"] != m["name"]:
+            if old["name"] != app_name:
                 raise ValueError("Prefix belongs to another application")
         releases = prefix / "releases"
         releases.mkdir(exist_ok=True)
@@ -205,6 +233,9 @@ def install(project, prefix, target, model=None, repairs=3):
         with tempfile.TemporaryDirectory(dir=prefix, prefix=".graft-") as tmp:
             scratch = Path(tmp)
             facts = target.facts(scratch)
+            if m is None:
+                m, origin = infer(root, sources, model if repairs else None, facts)
+                validate_contract(m, discovered=origin == "metadata")
             for attempt in range(repairs + 1):
                 with tempfile.TemporaryDirectory(dir=scratch) as stage:
                     work, app = Path(stage) / "source", Path(stage) / "app"
@@ -215,13 +246,14 @@ def install(project, prefix, target, model=None, repairs=3):
                         release = uuid.uuid4().hex
                         path = f"releases/{release}/app"
                         receipt = dict(name=m["name"], release=release, previous=previous, target=facts,
-                                       image=getattr(target, "image", None), model=model.model if history else None,
-                                       entry=m["entry"], repairs=history, checks=len(m["checks"]),
+                                       image=getattr(target, "image", None), model=model.model if history or origin == "model" else None,
+                                       contract_source=origin, entry=m["entry"], repairs=history, checks=len(m["checks"]),
                                        sha256={n: hashlib.sha256((app / n).read_bytes()).hexdigest()
                                                for n in m["outputs"]})
                         ready = scratch / "verified"
                         ready.mkdir()
                         app.rename(ready / "app")
+                        (ready / "contract.json").write_text(json.dumps(m, indent=2) + "\n")
                         (ready / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
                         (ready / "repair.json").write_text(json.dumps(
                             {k: v for k, v in current.items() if v != sources[k]}, indent=2) + "\n")

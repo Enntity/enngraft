@@ -1,9 +1,12 @@
+import json
 import os
 from pathlib import Path
+import shutil
+import subprocess
 import tempfile
 import unittest
 
-from enntity_graft import DockerTarget, MacTarget, install
+from enngraft import DockerTarget, MacTarget, install
 
 FIXTURE = Path(__file__).resolve().parents[1] / "examples/hoststamp"
 
@@ -31,12 +34,39 @@ class RealTarget(unittest.TestCase):
     def test_build_verify_and_launch(self):
         with tempfile.TemporaryDirectory() as d:
             prefix = Path(d).resolve()
-            receipt = install(FIXTURE, prefix, self.target, KnownRepair())
+            project = prefix / "source"
+            shutil.copytree(FIXTURE, project)
+            shutil.copyfile(FIXTURE.parent / "manifests/hoststamp.json", project / "graft.json")
+            receipt = install(project, prefix, self.target, KnownRepair())
             self.assertEqual(len(receipt["repairs"]), 1)
             if isinstance(self.target, DockerTarget):
                 self.assertEqual(receipt["target"]["executor_limits"]["memory_bytes"], 512 * 1024**2)
             result = self.target.run(["./hoststamp", "--bytes", "another input"], prefix / "current", False)
             self.assertEqual((result.code, result.stdout), (0, "13\n"))
+
+    def test_installed_command_from_project_directory(self):
+        with tempfile.TemporaryDirectory() as d:
+            project = Path(d).resolve() / "demo"
+            project.mkdir()
+            cmd = ["enngraft", "."]
+            env = dict(os.environ)
+            for key in ("GRAFT_ENDPOINT", "GRAFT_MODEL", "GRAFT_API_KEY"):
+                env.pop(key, None)
+            if isinstance(self.target, DockerTarget):
+                # The Docker client uses HOME to locate the owner's context.
+                prefix = project / "installed"
+                env["GRAFT_IMAGE"] = self.target.image
+                cmd += ["--prefix", str(prefix)]
+            else:
+                env["HOME"] = str(project)
+                prefix = project / ".local/share/enngraft" / project.name
+            (project / "hello.sh").write_text("#!/bin/sh\necho ready\n")
+            result = subprocess.run(cmd, cwd=project, env=env, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(Path(json.loads(result.stdout)["executable"]), prefix / "current/hello.sh")
+            self.assertEqual(json.loads(result.stdout)["contract_source"], "metadata")
+            check = self.target.run(["./hello.sh"], prefix / "current", False)
+            self.assertEqual((check.code, check.stdout), (0, "ready\n"))
 
     def test_build_isolation_and_readonly_check(self):
         with tempfile.TemporaryDirectory() as d:

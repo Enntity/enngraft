@@ -5,9 +5,9 @@ import subprocess
 import tempfile
 import unittest
 
-from enntity_graft import Model, install, rollback
-from enntity_graft.controller import locked
-from enntity_graft.runners import execute
+from enngraft import Model, install, rollback
+from enngraft.controller import locked
+from enngraft.runners import execute
 
 
 class FixtureTarget:

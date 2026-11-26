@@ -3,7 +3,7 @@ import json
 import unittest
 from unittest.mock import patch
 
-from enntity_graft import Model
+from enngraft import Model
 
 
 class Transports(unittest.TestCase):

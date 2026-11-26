@@ -1,0 +1,138 @@
+{
+  "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+  "baseline": [
+    {
+      "argv": [
+        "sh",
+        "build.sh"
+      ],
+      "code": 1,
+      "stdout": "",
+      "stderr": "build.sh: line 3: /opt/cross-toolchain/bin/cc: No such file or directory\n"
+    }
+  ],
+  "receipt": {
+    "name": "hoststamp",
+    "release": "0410f9bc75c64ee09b1eb25e785e931f",
+    "previous": null,
+    "target": {
+      "os": "Darwin",
+      "machine": "arm64",
+      "kernel": "27.0.0",
+      "logical_cpus": "12",
+      "physical_memory_bytes": "103079215104",
+      "tools": [
+        "/Library/Developer/CommandLineTools/usr/bin/cc",
+        "/Library/Developer/CommandLineTools/usr/bin/clang",
+        "/Library/Developer/CommandLineTools/usr/bin/gcc",
+        "/Library/Developer/CommandLineTools/usr/bin/make",
+        "/Library/Developer/CommandLineTools/usr/bin/python3"
+      ]
+    },
+    "image": null,
+    "model": "deepseek/deepseek-v4.1-flash-1017",
+    "contract_source": "model",
+    "entry": "hoststamp",
+    "repairs": [
+      {
+        "phase": "build",
+        "diagnostic": "build.sh: line 3: /opt/cross-toolchain/bin/cc: No such file or directory\n",
+        "changed": [
+          "build.sh",
+          "hoststamp.c"
+        ]
+      }
+    ],
+    "checks": 4,
+    "sha256": {
+      "hoststamp": "0169f31b98da887d884bfbdbeb91003cee603aa562b0a1c1f0ec7c4157ab81d8"
+    }
+  },
+  "inferred_contract": {
+    "version": 1,
+    "name": "hoststamp",
+    "files": [
+      "README.md",
+      "build.sh",
+      "hoststamp.c"
+    ],
+    "editable": [
+      "build.sh",
+      "hoststamp.c"
+    ],
+    "build": [
+      "sh",
+      "build.sh"
+    ],
+    "outputs": [
+      "hoststamp"
+    ],
+    "entry": "hoststamp",
+    "checks": [
+      {
+        "args": [
+          "--arch"
+        ],
+        "stdout": "@machine@\n"
+      },
+      {
+        "args": [
+          "--bytes",
+          "hello"
+        ],
+        "stdout": "5\n"
+      },
+      {
+        "args": [
+          "--bytes",
+          ""
+        ],
+        "stdout": "0\n"
+      },
+      {
+        "args": [
+          "--bogus"
+        ],
+        "stdout": "",
+        "exit": 2,
+        "stderr": "usage: hoststamp --arch | --bytes TEXT\n"
+      }
+    ]
+  },
+  "replacements": {
+    "build.sh": "#!/bin/sh\nset -eu\n\nif [ -n \"${CC:-}\" ]; then\n    compiler=$CC\nelif [ -x /Library/Developer/CommandLineTools/usr/bin/cc ]; then\n    compiler=/Library/Developer/CommandLineTools/usr/bin/cc\nelse\n    compiler=cc\nfi\n\n\"$compiler\" -std=c11 -O2 hoststamp.c -o hoststamp\n",
+    "hoststamp.c": "#include <stdio.h>\n#include <string.h>\n#include <sys/utsname.h>\n\n/* Print the running machine architecture or the byte length of an argument. */\nint main(int argc, char **argv) {\n    if (argc == 2 && strcmp(argv[1], \"--arch\") == 0) {\n        struct utsname info;\n        const char *arch = \"unknown\";\n\n        if (uname(&info) == 0 && info.machine[0] != '\\0') {\n            arch = info.machine;\n        }\n\n        puts(arch);\n        return 0;\n    }\n\n    if (argc == 3 && strcmp(argv[1], \"--bytes\") == 0) {\n        printf(\"%zu\\n\", strlen(argv[2]));\n        return 0;\n    }\n\n    fprintf(stderr, \"usage: hoststamp --arch | --bytes TEXT\\n\");\n    return 2;\n}\n"
+  },
+  "independent_checks": [
+    {
+      "argv": [
+        "--bytes",
+        "Café 🧬"
+      ],
+      "exit": 0,
+      "stdout": "10\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "--arch"
+      ],
+      "exit": 0,
+      "stdout": "arm64\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "--invalid"
+      ],
+      "exit": 2,
+      "stdout": "",
+      "stderr": "usage: hoststamp --arch | --bytes TEXT\n"
+    }
+  ],
+  "input_sha256": {
+    "README.md": "03861ad5daf782316bcc36df0ec5acfa9587cf77d8667b9fe63afccb8558cfab",
+    "build.sh": "5ef470ab8caedf4436ca705cd3db72e62e11cedf45a52c2f0821d0dd9730d708",
+    "hoststamp.c": "75330eea5c0f826173c4580f58967ab018891b82ad267109b7a157f87e8956cf"
+  }
+}
