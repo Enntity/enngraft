@@ -10,6 +10,11 @@ requires-python = ">=3.9"
 license = {text = "MIT"}
 readme = "README.md"
 
+[project.urls]
+Repository = "https://github.com/Enntity/enngraft"
+Documentation = "https://github.com/Enntity/enngraft/blob/main/docs/integration.md"
+Issues = "https://github.com/Enntity/enngraft/issues"
+
 [project.scripts]
 enngraft = "enngraft.__main__:main"
 

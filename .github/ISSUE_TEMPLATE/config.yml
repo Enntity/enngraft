@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Privately report a security issue
+    url: https://github.com/Enntity/enngraft/security/advisories/new
+    about: Use private reporting for vulnerabilities and security-sensitive traces.
