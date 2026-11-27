@@ -2,7 +2,7 @@
 
 A photo lab uses Darkroom to turn RGB digital negatives into positive prints. Its original pixel routine uses x86 SSE2 instructions. This purpose-built compatibility demo uses the same source files and the same image on x86-64 Linux and an Apple-silicon Mac.
 
-[Watch *One for My Wall*](darkroom.mp4). The story follows someone trying to turn a digital negative into a print for their wall. Codex wrote and rendered the narration using Jinx’s selected voice profile. The film uses Enntity’s original score, *Signal Garden*. The closing credit animates the pixel grin from Jinx’s *Signatures in the Static*. The Mac footage comes from a real terminal recording with the model wait shortened. The finished prints shown in the comparison come from the three executables.
+[Watch *One for My Wall*](darkroom.mp4). The story follows someone trying to turn a digital negative into a print for their wall. Jinx chose the final wording and supplied the ten narration takes, including the Living Software close. Codex edited the picture, sound, and captions. The film uses Enntity’s original score, *Signal Garden*. The closing credit animates the pixel grin from Jinx’s *Signatures in the Static*. The Mac footage comes from a real terminal recording with the model wait shortened. The finished prints shown in the comparison come from the three executables.
 
 | Target | What happened | Evidence |
 | --- | --- | --- |
